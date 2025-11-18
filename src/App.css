@@ -1,0 +1,63 @@
+body {
+  font-family: 'Montserrat', sans-serif;
+  background-color: #FFFFFF;
+  color: #1F2937;
+}
+
+h1,
+h2,
+h4 {
+  font-weight: 600;
+  color: #000000;
+}
+
+.text-dark {
+  color: #1F2937;
+}
+
+.text-azul {
+  color: #3562aa;
+}
+
+.bg-primary {
+  background-color: #87a7ff !important;
+}
+
+.bg-claro {
+  background-color: #87a7ff71;
+}
+
+.btn-azul {
+  background-color: #87a7ff !important;
+  color: black !important;
+  border: none !important;
+  transition: background-color 0.3s ease;
+}
+
+.btn-azul:hover {
+  background-color: #87a7ff !important;
+}
+
+.card {
+  background-color: #87a7ff46;
+  border: none;
+}
+
+footer a {
+  color: #1E3A8A;
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+img {
+  display: block;
+  margin: 20px auto;
+  border-radius: 8px;
+}
+
+.bienvenida-card {
+  margin-top: 100px;
+}
