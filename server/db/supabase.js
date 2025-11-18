@@ -1,8 +1,10 @@
-// backend/db/supabase.js
-import { createClient } from "@supabase/supabase-js";
-import "dotenv/config";
+import pkg from "pg";
+const { Pool } = pkg;
 
-export const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+export const pool = new Pool({
+  host: process.env.PGHOST,
+  user: process.env.PGUSER,
+  database: process.env.PGDATABASE,
+  password: process.env.PGPASSWORD,
+  port: process.env.PGPORT
+});
