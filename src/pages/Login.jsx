@@ -1,8 +1,9 @@
 // src/pages/Login.jsx
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "../index.css";
 import Navbar from "../components/Navbar";
+import { client } from "../api/client";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -12,7 +13,7 @@ export default function Login() {
   const [mensaje, setMensaje] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const mostrarMensaje = (texto, tipo) => {
+  const mostrarMensaje = (texto, tipo = "danger") => {
     setMensaje({ texto, tipo });
     setTimeout(() => setMensaje(null), 3000);
   };
@@ -21,38 +22,37 @@ export default function Login() {
     e.preventDefault();
 
     if (!email || !password) {
-      mostrarMensaje("Correo y contraseña son obligatorios", "danger");
+      mostrarMensaje("Correo y contraseña son obligatorios");
       return;
     }
 
     try {
       setLoading(true);
 
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const data = await client.post("/api/auth/login", {
+        email,
+        password
       });
 
-      const data = await res.json();
-
-      if (res.ok && data.login && data.token) {
-        // Guardar token y usuario
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("usuario", JSON.stringify(data.usuario));
-
-        mostrarMensaje("Inicio de sesión exitoso", "success");
-
-        // Redirigir a dashboard de sociedades
-        setTimeout(() => {
-          navigate("/sociedades");
-        }, 500);
-      } else {
-        mostrarMensaje(data.mensaje || "Correo o contraseña incorrectos", "danger");
+      if (!data.token) {
+        mostrarMensaje("Credenciales incorrectas");
+        return;
       }
+
+      // guardar token
+      localStorage.setItem("token", data.token);
+
+      // obtener usuario autenticado
+      const user = await client.get("/api/auth/check");
+      localStorage.setItem("usuario", JSON.stringify(user.usuario));
+
+      mostrarMensaje("Inicio de sesión exitoso", "success");
+
+      setTimeout(() => navigate("/sociedades"), 500);
+
     } catch (error) {
       console.error(error);
-      mostrarMensaje("Error de conexión al servidor", "danger");
+      mostrarMensaje(error.message || "Error al iniciar sesión");
     } finally {
       setLoading(false);
     }
@@ -73,14 +73,15 @@ export default function Login() {
       <main className="main-content">
         <div className="content-wrapper">
           <div className="content-grid">
+
             <section className="info-section">
               <h2>¿Qué es Flowy?</h2>
               <p>
-                Flowy es una aplicación web que automatiza la distribución de
+                Flowy es una aplicación que automatiza la distribución de
                 dinero entre socios según porcentajes personalizados.
               </p>
               <ul className="features-list">
-                <li>Evita errores humanos en cálculos financieros</li>
+                <li>Evita errores en cálculos financieros</li>
                 <li>Distribuye automáticamente según porcentajes</li>
                 <li>Registra el historial de transacciones</li>
               </ul>
@@ -105,8 +106,8 @@ export default function Login() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="ejemplo@correo.com"
-                      required
                       disabled={loading}
+                      required
                     />
                   </div>
 
@@ -117,25 +118,22 @@ export default function Login() {
                       id="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      required
                       disabled={loading}
+                      required
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    className="btn-primary"
-                    disabled={loading}
-                  >
+                  <button type="submit" className="btn-primary" disabled={loading}>
                     {loading ? "Entrando..." : "Entrar"}
                   </button>
 
-                  <a href="/register" className="btn-secondary">
+                  <Link to="/register" className="btn-secondary">
                     Registrarse
-                  </a>
+                  </Link>
                 </form>
               </div>
             </section>
+
           </div>
         </div>
       </main>

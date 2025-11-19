@@ -1,92 +1,87 @@
-import { useState } from "react";
-import { Link } from "react-router-dom";
+// src/components/Navbar.jsx
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
-  const toggleMenu = () => setIsMenuOpen((prev) => !prev);
-  const closeMenu = () => setIsMenuOpen(false);
+  // cargar usuario del localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("usuario");
+      setUser(raw ? JSON.parse(raw) : null);
+    } catch {
+      setUser(null);
+    }
+  }, []);
 
-  // 🔥 Detectar si hay usuario logueado
-  const user = localStorage.getItem("usuario");
+  const toggle = () => setIsOpen((p) => !p);
+  const close = () => setIsOpen(false);
 
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("usuario");
-    window.location.href = "/login";
+    navigate("/login");
   };
 
   return (
     <nav className="navbar">
       <div className="nav-container">
-        {/* LOGO */}
-        <div className="nav-logo">
-          <Link to="/" className="logo-text" onClick={closeMenu}>
-            Flowy
-          </Link>
-        </div>
 
-        {/* BOTÓN HAMBURGUESA */}
+        {/* LOGO */}
+        <Link to="/" className="nav-logo" onClick={close}>
+          <span className="logo-text">Flowy</span>
+        </Link>
+
+        {/* BOTÓN MÓVIL */}
         <button
           className="nav-toggle"
-          onClick={toggleMenu}
-          aria-label="Abrir o cerrar menú"
-          aria-expanded={isMenuOpen}
+          aria-expanded={isOpen}
+          aria-label="Toggle navigation"
+          onClick={toggle}
         >
-          <span className={`hamburger-line ${isMenuOpen ? "active" : ""}`} />
-          <span className={`hamburger-line ${isMenuOpen ? "active" : ""}`} />
-          <span className={`hamburger-line ${isMenuOpen ? "active" : ""}`} />
+          <div className={`hamburger ${isOpen ? "active" : ""}`} />
         </button>
 
         {/* MENÚ */}
-        <div className={`nav-menu ${isMenuOpen ? "active" : ""}`}>
+        <div className={`nav-menu ${isOpen ? "open" : ""}`}>
 
-          {/* 🔥 SOLO SI HAY SESIÓN → mostrar estos enlaces */}
+          {/* LINKS SI ESTÁ LOGUEADO */}
           {user && (
             <div className="nav-links">
-              <Link to="/sociedades" className="nav-link" onClick={closeMenu}>
+              <Link to="/sociedades" className="nav-link" onClick={close}>
                 Sociedades
               </Link>
 
-              <Link to="/ingresos" className="nav-link" onClick={closeMenu}>
+              <Link to="/ingresos" className="nav-link" onClick={close}>
                 Ingresos
               </Link>
 
-              <Link to="/distribucion" className="nav-link" onClick={closeMenu}>
-                Distribución
+              <Link to="/distribucion" className="nav-link" onClick={close}>
+                Distribuir ingresos
               </Link>
 
-              <Link to="/distribuir" className="nav-link" onClick={closeMenu}>
-                Distribuir
-              </Link>
-
-              <Link
-                to="/historial-distribuciones"
-                className="nav-link"
-                onClick={closeMenu}
-              >
-                Historial Distribuciones
+              <Link to="/historial-distribuciones" className="nav-link" onClick={close}>
+                Historial
               </Link>
             </div>
           )}
 
-          <div className="nav-cta">
-            {/* 🔥 SI NO hay sesión → mostrar Registrarse e Iniciar sesión */}
-            {!user && (
+          {/* ACCIONES (CTA) */}
+          <div className="nav-actions">
+            {!user ? (
               <>
-                <Link to="/register" className="cta-button" onClick={closeMenu}>
+                <Link to="/register" className="cta-button" onClick={close}>
                   Registrarse
                 </Link>
-
-                <Link to="/login" className="cta-button" onClick={closeMenu}>
+                <Link to="/login" className="cta-button" onClick={close}>
                   Iniciar sesión
                 </Link>
               </>
-            )}
-
-            {/* 🔥 SI hay sesión → mostrar Cerrar sesión */}
-            {user && (
-              <button className="cta-button" onClick={logout}>
+            ) : (
+              <button className="cta-button logout" onClick={logout}>
                 Cerrar sesión
               </button>
             )}

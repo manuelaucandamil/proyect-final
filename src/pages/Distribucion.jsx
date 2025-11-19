@@ -1,163 +1,142 @@
-import { useState, useEffect } from "react";
+// src/pages/Distribucion.jsx
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import { client } from "../api/client";
 
 export default function Distribucion() {
-  const [sociedades, setSociedades] = useState([]);
-  const [socios, setSocios] = useState([]);
-  const [sociedadSeleccionada, setSociedadSeleccionada] = useState("");
-  const [monto, setMonto] = useState("");
-  const [resultados, setResultados] = useState([]);
+  const navigate = useNavigate();
 
-  // 1️⃣ Cargar sociedades
+  const [sociedades, setSociedades] = useState([]);
+  const [ingresos, setIngresos] = useState([]);
+  const [idSociedad, setIdSociedad] = useState("");
+  const [mensaje, setMensaje] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const mostrarMensaje = (texto, tipo = "danger") =>
+    setMensaje({ texto, tipo });
+
+  // 1️⃣ Cargar sociedades del usuario
   useEffect(() => {
-    fetch("http://localhost:3000/api/sociedades")
-      .then((res) => res.json())
-      .then((data) => setSociedades(data))
-      .catch(() => alert("Error cargando sociedades"));
+    const cargar = async () => {
+      try {
+        const data = await client.get("/api/sociedades");
+        setSociedades(data);
+      } catch (err) {
+        mostrarMensaje(err.message);
+      }
+    };
+    cargar();
   }, []);
 
-  // 2️⃣ Al seleccionar sociedad → traer sus socios
-  const cargarSocios = async (idSociedad) => {
-    setSociedadSeleccionada(idSociedad);
+  // 2️⃣ Cuando el usuario selecciona una sociedad → cargar ingresos
+  const cargarIngresos = async (idSoc) => {
+    setIdSociedad(idSoc);
+    setIngresos([]);
 
-    const res = await fetch(`http://localhost:3000/api/socios/${idSociedad}`);
-    const data = await res.json();
+    try {
+      setLoading(true);
 
-    setSocios(data);
-    setResultados([]);
-    setMonto("");
+      const data = await client.get(`/api/ingresos/${idSoc}`);
+      setIngresos(data);
+
+    } catch (err) {
+      mostrarMensaje(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // 3️⃣ Calcular reparto
-  const calcularDistribucion = () => {
-    if (!monto || monto <= 0) return alert("Ingresa un monto válido");
+  // 3️⃣ Repartir un ingreso
+  const repartirIngreso = async (id_ingreso) => {
+    try {
+      setLoading(true);
 
-    const calculos = socios.map((s) => ({
-      ...s,
-      valor_recibido: (monto * (s.porcentaje / 100)).toFixed(2),
-    }));
+      await client.post("/api/distribuciones", {
+        id_ingreso: Number(id_ingreso)
+      });
 
-    setResultados(calculos);
-  };
+      mostrarMensaje("Distribución realizada correctamente 🎉", "success");
 
-  // 4️⃣ Guardar distribución en backend
-  const guardarDistribucion = async () => {
-    const payload = {
-      id_sociedad: sociedadSeleccionada,
-      monto_total: monto,
-      detalles: resultados.map((r) => ({
-        id_usuario: r.id_usuario,
-        porcentaje: r.porcentaje,
-        valor_recibido: r.valor_recibido,
-      })),
-    };
+      // recargar ingresos para ver cambios en el historial
+      cargarIngresos(idSociedad);
 
-    const res = await fetch("http://localhost:3000/api/distribuciones", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (res.ok) {
-      alert("Distribución registrada con éxito");
-      setMonto("");
-      setSocios([]);
-      setResultados([]);
-      setSociedadSeleccionada("");
-    } else {
-      alert("Error al guardar distribución");
+    } catch (err) {
+      mostrarMensaje(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="container mt-4">
-      <h2 className="mb-4 text-primary">Distribución de Dinero entre Socios</h2>
+    <div className="login-container">
+      <Navbar />
 
-      {/* Seleccionar sociedad */}
-      <div className="card p-4 shadow-sm">
-        <label className="form-label fw-bold">Selecciona una Sociedad</label>
-        <select
-          className="form-select"
-          value={sociedadSeleccionada}
-          onChange={(e) => cargarSocios(e.target.value)}
-        >
-          <option value="">-- Selecciona --</option>
-          {sociedades.map((s) => (
-            <option key={s.id_sociedad} value={s.id_sociedad}>
-              {s.nombre}
-            </option>
-          ))}
-        </select>
-      </div>
+      <main className="main-content">
+        <div className="register-card fade-up">
 
-      {/* Mostrar socios */}
-      {socios.length > 0 && (
-        <div className="card p-4 mt-4 shadow-sm">
-          <h5 className="mb-3">Socios de la Sociedad</h5>
-          <table className="table table-bordered">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Correo</th>
-                <th>Porcentaje (%)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {socios.map((s) => (
-                <tr key={s.id_usuario}>
-                  <td>{s.nombre}</td>
-                  <td>{s.email}</td>
-                  <td>{s.porcentaje}%</td>
-                </tr>
+          <h2 className="mb-3">Distribuir ingresos</h2>
+
+          {mensaje && (
+            <div className={`alert alert-${mensaje.tipo}`}>{mensaje.texto}</div>
+          )}
+
+          {/* Seleccionar sociedad */}
+          <div className="mb-4">
+            <label className="form-label fw-bold">Selecciona una sociedad</label>
+            <select
+              className="form-select"
+              value={idSociedad}
+              onChange={(e) => cargarIngresos(e.target.value)}
+            >
+              <option value="">-- Selecciona --</option>
+              {sociedades.map((s) => (
+                <option key={s.id_sociedad} value={s.id_sociedad}>
+                  {s.nombre}
+                </option>
               ))}
-            </tbody>
-          </table>
-
-          {/* Monto a distribuir */}
-          <div className="mt-3">
-            <label className="form-label fw-bold">Monto total a distribuir</label>
-            <input
-              type="number"
-              className="form-control"
-              placeholder="Ejemplo: 1500000"
-              value={monto}
-              onChange={(e) => setMonto(e.target.value)}
-            />
+            </select>
           </div>
 
-          <button onClick={calcularDistribucion} className="btn btn-primary mt-3">
-            Calcular Distribución
-          </button>
-        </div>
-      )}
+          {/* Ingresos de la sociedad */}
+          {idSociedad && (
+            <div className="card p-4 mt-3 shadow-sm">
+              <h4>Ingresos registrados</h4>
 
-      {/* Resultados */}
-      {resultados.length > 0 && (
-        <div className="card p-4 mt-4 shadow">
-          <h5>Resultados del Reparto</h5>
-          <table className="table table-striped mt-3">
-            <thead>
-              <tr>
-                <th>Socio</th>
-                <th>Porcentaje</th>
-                <th>Valor Recibido</th>
-              </tr>
-            </thead>
-            <tbody>
-              {resultados.map((r) => (
-                <tr key={r.id_usuario}>
-                  <td>{r.nombre}</td>
-                  <td>{r.porcentaje}%</td>
-                  <td>${Number(r.valor_recibido).toLocaleString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+              {loading ? (
+                <p>Cargando ingresos...</p>
+              ) : ingresos.length === 0 ? (
+                <p className="text-muted mt-2">Aún no hay ingresos registrados.</p>
+              ) : (
+                <ul className="list-group mt-3">
+                  {ingresos.map((i) => (
+                    <li
+                      key={i.id_ingreso}
+                      className="list-group-item d-flex justify-content-between align-items-center"
+                    >
+                      <div>
+                        <strong>${i.monto}</strong> — {i.descripcion}
+                        <br />
+                        <small className="text-muted">
+                          {new Date(i.fecha).toLocaleString()}
+                        </small>
+                      </div>
 
-          <button className="btn btn-success mt-3" onClick={guardarDistribucion}>
-            Guardar Distribución
-          </button>
+                      <button
+                        className="btn btn-success btn-sm"
+                        onClick={() => repartirIngreso(i.id_ingreso)}
+                      >
+                        Repartir
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
         </div>
-      )}
+      </main>
     </div>
   );
 }

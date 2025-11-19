@@ -6,7 +6,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Sociedades from "./pages/Sociedades";
-import RegisterSociety from "./pages/RegisterSociety";
+import RegisterSociety from "./pages/RegistrarSociedad";
 
 function App() {
   return (

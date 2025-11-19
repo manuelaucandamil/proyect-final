@@ -1,186 +1,83 @@
 // src/pages/Sociedades.jsx
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "../index.css";
 import Navbar from "../components/Navbar";
+import { client } from "../api/client";
 
 export default function Sociedades() {
   const navigate = useNavigate();
-
-  const [misSociedades, setMisSociedades] = useState([]);
-  const [codigoSociedad, setCodigoSociedad] = useState("");
-  const [porcentajeSocio, setPorcentajeSocio] = useState("");
+  const [sociedades, setSociedades] = useState([]);
   const [mensaje, setMensaje] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const mostrarMensaje = (texto, tipo) => {
+  const mostrarMensaje = (texto, tipo = "danger") => {
     setMensaje({ texto, tipo });
     setTimeout(() => setMensaje(null), 4000);
   };
 
-  // Cargar sociedades del usuario al entrar
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      // Si no hay token, mandar al login
-      navigate("/login");
-      return;
-    }
+    cargarSociedades();
+  }, []);
 
-    cargarMisSociedades(token);
-  }, [navigate]);
-
-  const cargarMisSociedades = async (token) => {
+  const cargarSociedades = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/mis-sociedades", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        console.error(data);
-        if (res.status === 401) {
-          // Token inválido o expirado, redirigir a login
-          localStorage.removeItem("token");
-          localStorage.removeItem("usuario");
-          navigate("/login");
-          return;
-        }
-        mostrarMensaje(
-          data.mensaje || "Error al obtener tus sociedades",
-          "danger"
-        );
-        return;
-      }
-
-      setMisSociedades(data);
-    } catch (error) {
-      console.error(error);
-      mostrarMensaje("Error de conexión al servidor", "danger");
+      const data = await client.get("/api/sociedades");
+      setSociedades(data);
+    } catch (err) {
+      mostrarMensaje(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUnirmeSociedad = async (e) => {
-    e.preventDefault();
-
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-
-    if (!codigoSociedad || !porcentajeSocio) {
-      mostrarMensaje(
-        "Debes ingresar el código de la sociedad y el porcentaje",
-        "danger"
-      );
-      return;
-    }
-
-    const porcentajeNumero = parseFloat(porcentajeSocio);
-
-    if (isNaN(porcentajeNumero) || porcentajeNumero <= 0) {
-      mostrarMensaje("El porcentaje debe ser mayor a 0", "danger");
-      return;
-    }
-
-    if (porcentajeNumero > 100) {
-      mostrarMensaje("El porcentaje no puede ser mayor a 100%", "danger");
-      return;
-    }
+  const eliminarSociedad = async (id) => {
+    if (!confirm("¿Seguro que deseas eliminar esta sociedad?")) return;
 
     try {
-      setLoading(true);
-
-      const res = await fetch("/api/unirme-sociedad", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          codigoSociedad,
-          porcentaje: porcentajeNumero,
-        }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        console.error(data);
-        mostrarMensaje(
-          data.mensaje || "No fue posible unirse a la sociedad",
-          "danger"
-        );
-        return;
-      }
-
-      mostrarMensaje("¡Te uniste a la sociedad correctamente!", "success");
-
-      setCodigoSociedad("");
-      setPorcentajeSocio("");
-
-      await cargarMisSociedades(token);
-    } catch (error) {
-      console.error(error);
-      mostrarMensaje("Error de conexión al servidor", "danger");
-    } finally {
-      setLoading(false);
+      await client.delete(`/api/sociedades/${id}`);
+      mostrarMensaje("Sociedad eliminada", "success");
+      cargarSociedades();
+    } catch (err) {
+      mostrarMensaje(err.message);
     }
   };
 
   return (
     <div className="login-container">
-      <div className="background-image"></div>
       <Navbar />
 
       <main className="main-content">
         <div className="register-container">
           <div className="register-card">
+
             <div className="card-header">
               <h3>Mis Sociedades</h3>
-              <p>
-                Aquí puedes ver las sociedades a las que perteneces y unirte a
-                nuevas usando su código.
-              </p>
+              <p>Las sociedades que has creado en Flowy.</p>
             </div>
 
             <div className="card-body">
+
               {mensaje && (
                 <div className={`alert alert-${mensaje.tipo}`}>
                   {mensaje.texto}
                 </div>
               )}
 
-              {loading && (
-                <div className="text-center mb-3">
-                  <small>Cargando...</small>
-                </div>
-              )}
+              {loading && <p>Cargando...</p>}
 
               <div className="sociedades-grid">
-                {/* Columna: Mis sociedades */}
                 <section className="sociedades-col">
-                  <h4 className="section-title">Sociedades a las que perteneces</h4>
+                  <h4 className="section-title">Listado</h4>
 
-                  {misSociedades.length === 0 ? (
-                    <p className="text-muted">
-                      Aún no perteneces a ninguna sociedad. Únete usando un
-                      código.
-                    </p>
+                  {sociedades.length === 0 ? (
+                    <p className="text-muted">No tienes sociedades creadas.</p>
                   ) : (
                     <ul className="list-group">
-                      {misSociedades.map((soc) => (
-                        <li
-                          key={soc.id_sociedad}
-                          className="list-group-item d-flex justify-content-between align-items-center"
-                        >
+                      {sociedades.map((soc) => (
+                        <li key={soc.id_sociedad}
+                            className="list-group-item d-flex justify-content-between">
                           <div>
                             <strong>{soc.nombre}</strong>
                             {soc.descripcion && (
@@ -189,77 +86,37 @@ export default function Sociedades() {
                               </div>
                             )}
                           </div>
-                          <span className="badge bg-primary rounded-pill">
-                            {soc.porcentaje}% mío
-                          </span>
+
+                          <div className="d-flex gap-2">
+                            <button
+                              className="btn btn-sm btn-info"
+                              onClick={() => navigate(`/participaciones/${soc.id_sociedad}`)}
+                            >
+                              Ver socios
+                            </button>
+
+                            <button
+                              className="btn btn-sm btn-danger"
+                              onClick={() => eliminarSociedad(soc.id_sociedad)}
+                            >
+                              Eliminar
+                            </button>
+                          </div>
                         </li>
                       ))}
                     </ul>
                   )}
                 </section>
 
-                {/* Columna: Unirme a otra sociedad */}
                 <section className="socios-col">
-                  <h4 className="section-title">Unirme a otra sociedad</h4>
-                  <p className="text-muted small mb-2">
-                    Ingresa el código de la sociedad y el porcentaje que te
-                    corresponde. El sistema validará que la suma total no
-                    supere el 100%.
-                  </p>
+                  <h4 className="section-title">Crear nueva sociedad</h4>
 
-                  <form
-                    onSubmit={handleUnirmeSociedad}
-                    className="register-form"
-                  >
-                    <div className="form-group">
-                      <label
-                        htmlFor="codigoSociedad"
-                        className="form-label"
-                      >
-                        Código de la sociedad
-                      </label>
-                      <input
-                        type="text"
-                        id="codigoSociedad"
-                        className="form-control"
-                        value={codigoSociedad}
-                        onChange={(e) => setCodigoSociedad(e.target.value)}
-                        placeholder="Ej: FLOWY-12345"
-                        required
-                        disabled={loading}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label
-                        htmlFor="porcentajeSocio"
-                        className="form-label"
-                      >
-                        Porcentaje de participación (%)
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        id="porcentajeSocio"
-                        className="form-control"
-                        value={porcentajeSocio}
-                        onChange={(e) => setPorcentajeSocio(e.target.value)}
-                        placeholder="Ej: 25"
-                        required
-                        disabled={loading}
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      className="btn btn-primary w-100"
-                      disabled={loading}
-                    >
-                      {loading ? "Enviando..." : "Unirme a la sociedad"}
-                    </button>
-                  </form>
+                  <Link to="/registrar-sociedad" className="btn btn-primary w-100">
+                    Registrar Sociedad
+                  </Link>
                 </section>
               </div>
+
             </div>
           </div>
         </div>

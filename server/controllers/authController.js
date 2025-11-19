@@ -1,40 +1,76 @@
+// server/controllers/authController.js
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
-import { supabaseAdmin } from "../db.js";
+import { supabaseAdmin } from "../db/supabase.js";
 
+const JWT_SECRET = process.env.JWT_SECRET || "dev_secret_change_me";
+
+// POST /api/auth/register
 export async function registrar(req, res) {
-  const { nombre, email, password } = req.body;
+  try {
+    const { nombre, email, password } = req.body;
 
-  const password_hash = await bcrypt.hash(password, 10);
+    if (!nombre || !email || !password) {
+      return res.status(400).json({ mensaje: "Nombre, email y password son obligatorios" });
+    }
 
-  const { error } = await supabase
-    .from("usuarios")
-    .insert([{ nombre, email, password_hash }]);
+    // Hashear contraseña
+    const password_hash = await bcrypt.hash(password, 10);
 
-  if (error) return res.status(400).json(error);
+    const { error } = await supabaseAdmin
+      .from("usuarios")
+      .insert([{ nombre, email, password_hash }]);
 
-  res.json({ mensaje: "Usuario registrado" });
+    if (error) {
+      console.error("Error insertando usuario:", error);
+      // Si es email duplicado (unique violation)
+      if (error.code === "23505") {
+        return res.status(400).json({ mensaje: "Ya existe un usuario con ese email" });
+      }
+      return res.status(400).json({ mensaje: "No se pudo registrar el usuario" });
+    }
+
+    return res.json({ mensaje: "Usuario registrado" });
+  } catch (err) {
+    console.error("Error en registrar:", err);
+    return res.status(500).json({ mensaje: "Error interno del servidor" });
+  }
 }
 
+// POST /api/auth/login
 export async function login(req, res) {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const { data: user, error } = await supabase
-    .from("usuarios")
-    .select("*")
-    .eq("email", email)
-    .single();
+    if (!email || !password) {
+      return res.status(400).json({ mensaje: "Email y password son obligatorios" });
+    }
 
-  if (error || !user) return res.status(400).json({ mensaje: "Usuario no existe" });
+    const { data: user, error } = await supabaseAdmin
+      .from("usuarios")
+      .select("*")
+      .eq("email", email)
+      .single();
 
-  const ok = await bcrypt.compare(password, user.password_hash);
-  if (!ok) return res.status(400).json({ mensaje: "Credenciales incorrectas" });
+    if (error || !user) {
+      console.error("Error buscando usuario:", error);
+      return res.status(400).json({ mensaje: "Usuario no existe" });
+    }
 
-  const token = jwt.sign(
-    { id_usuario: user.id_usuario, nombre: user.nombre },
-    "CLAVE_SECRETA",
-    { expiresIn: "5h" }
-  );
+    const ok = await bcrypt.compare(password, user.password_hash);
+    if (!ok) {
+      return res.status(400).json({ mensaje: "Credenciales incorrectas" });
+    }
 
-  res.json({ token });
+    const token = jwt.sign(
+      { id_usuario: user.id_usuario, nombre: user.nombre },
+      JWT_SECRET,
+      { expiresIn: "5h" }
+    );
+
+    return res.json({ token });
+  } catch (err) {
+    console.error("Error en login:", err);
+    return res.status(500).json({ mensaje: "Error interno del servidor" });
+  }
 }
