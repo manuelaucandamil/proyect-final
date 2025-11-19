@@ -7,6 +7,15 @@ export default function Navbar() {
   const toggleMenu = () => setIsMenuOpen((prev) => !prev);
   const closeMenu = () => setIsMenuOpen(false);
 
+  // 🔥 Detectar si hay usuario logueado
+  const user = localStorage.getItem("usuario");
+
+  const logout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("usuario");
+    window.location.href = "/login";
+  };
+
   return (
     <nav className="navbar">
       <div className="nav-container">
@@ -31,31 +40,57 @@ export default function Navbar() {
 
         {/* MENÚ */}
         <div className={`nav-menu ${isMenuOpen ? "active" : ""}`}>
-          <div className="nav-links">
-            <Link to="/sociedades" className="nav-link" onClick={closeMenu}>
-              Sociedades
-            </Link>
 
-            <Link to="/distribucion" className="nav-link" onClick={closeMenu}>
-              Distribución
-            </Link>
-          </div>
+          {/* 🔥 SOLO SI HAY SESIÓN → mostrar estos enlaces */}
+          {user && (
+            <div className="nav-links">
+              <Link to="/sociedades" className="nav-link" onClick={closeMenu}>
+                Sociedades
+              </Link>
+
+              <Link to="/ingresos" className="nav-link" onClick={closeMenu}>
+                Ingresos
+              </Link>
+
+              <Link to="/distribucion" className="nav-link" onClick={closeMenu}>
+                Distribución
+              </Link>
+
+              <Link to="/distribuir" className="nav-link" onClick={closeMenu}>
+                Distribuir
+              </Link>
+
+              <Link
+                to="/historial-distribuciones"
+                className="nav-link"
+                onClick={closeMenu}
+              >
+                Historial Distribuciones
+              </Link>
+            </div>
+          )}
 
           <div className="nav-cta">
-            <Link to="/register" className="cta-button" onClick={closeMenu}>
-              Registrarse
-            </Link>
+            {/* 🔥 SI NO hay sesión → mostrar Registrarse e Iniciar sesión */}
+            {!user && (
+              <>
+                <Link to="/register" className="cta-button" onClick={closeMenu}>
+                  Registrarse
+                </Link>
+
+                <Link to="/login" className="cta-button" onClick={closeMenu}>
+                  Iniciar sesión
+                </Link>
+              </>
+            )}
+
+            {/* 🔥 SI hay sesión → mostrar Cerrar sesión */}
+            {user && (
+              <button className="cta-button" onClick={logout}>
+                Cerrar sesión
+              </button>
+            )}
           </div>
-          <button
-            className="cta-button"
-            onClick={() => {
-              localStorage.removeItem("token");
-              localStorage.removeItem("usuario");
-              window.location.href = "/login";
-            }}
-          >
-            Cerrar sesión
-          </button>
         </div>
       </div>
     </nav>

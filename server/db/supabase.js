@@ -1,14 +1,12 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from "@supabase/supabase-js";
 
-const { SUPABASE_URL, SUPABASE_SERVICE_ROLE } = process.env
+const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } = process.env;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
-  console.error('❌ Faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE en variables de entorno.')
-  process.exit(1)
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+  console.error("❌ Faltan variables SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY en el .env");
+  process.exit(1);
 }
 
-export const supabaseAdmin = createClient(
-  SUPABASE_URL,
-  SUPABASE_SERVICE_ROLE,
-  { auth: { persistSession: false } }
-)
+export const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: { persistSession: false },
+});
