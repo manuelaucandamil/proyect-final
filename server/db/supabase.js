@@ -1,10 +1,14 @@
-import pkg from "pg";
-const { Pool } = pkg;
+import { createClient } from '@supabase/supabase-js'
 
-export const pool = new Pool({
-  host: process.env.PGHOST,
-  user: process.env.PGUSER,
-  database: process.env.PGDATABASE,
-  password: process.env.PGPASSWORD,
-  port: process.env.PGPORT
-});
+const { SUPABASE_URL, SUPABASE_SERVICE_ROLE } = process.env
+
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE) {
+  console.error('❌ Faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE en variables de entorno.')
+  process.exit(1)
+}
+
+export const supabaseAdmin = createClient(
+  SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE,
+  { auth: { persistSession: false } }
+)
