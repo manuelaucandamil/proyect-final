@@ -24,6 +24,7 @@ export default function Sociedades() {
     try {
       setLoading(true);
       const data = await client.get("/api/sociedades");
+      console.log(data);
       setSociedades(data);
     } catch (err) {
       mostrarMensaje(err.message);
@@ -89,17 +90,10 @@ export default function Sociedades() {
 
                           <div className="d-flex gap-2">
                             <button
-                              className="btn btn-sm btn-info"
+                              className="btnverSocios btn-sm btn-info"
                               onClick={() => navigate(`/participaciones/${soc.id_sociedad}`)}
                             >
                               Ver socios
-                            </button>
-
-                            <button
-                              className="btn btn-sm btn-danger"
-                              onClick={() => eliminarSociedad(soc.id_sociedad)}
-                            >
-                              Eliminar
                             </button>
                           </div>
                         </li>

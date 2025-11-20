@@ -166,7 +166,7 @@ export default function Participaciones() {
                         %
 
                         <button
-                          className="btn btn-sm btn-danger"
+                          className="btnverSocios btn-sm btn-danger"
                           onClick={() => eliminarSocio(s.id_participacion)}
                         >
                           Eliminar
@@ -186,7 +186,7 @@ export default function Participaciones() {
                   <input
                     type="number"
                     className="form-control"
-                    placeholder="ID del usuario"
+                    placeholder="Codigo usuario"
                     value={nuevoSocio.id_usuario}
                     onChange={(e) =>
                       setNuevoSocio({ ...nuevoSocio, id_usuario: e.target.value })

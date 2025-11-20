@@ -65,3 +65,26 @@ export async function historialIngresos(req, res) {
     return res.status(500).json({ mensaje: "Error interno del servidor" });
   }
 }
+
+export async function ingresoIndividual(req, res) {
+  try {
+    const { id_sociedad } = req.params;
+    if (!id_sociedad) {
+      return res.status(400).json({ mensaje: "id_ingreso es obligatorio" });
+    }
+    const { data, error } = await supabaseAdmin
+      .from("ingresos")
+      .select("*")
+      .eq("id_sociedad", id_sociedad)
+    if (error) {
+      console.error("Error consultando ingreso individual:", error);
+      return res.status(400).json({ mensaje: "No se pudo obtener el ingreso" });
+    }
+    console.log("Ingreso individual obtenido:", data);
+    return res.json(data);
+      
+  }catch (err) {
+    console.error("Error en ingresoIndividual:", err);
+    return res.status(500).json({ mensaje: "Error interno del servidor" });
+  }
+}

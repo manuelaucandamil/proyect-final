@@ -9,6 +9,7 @@ export default function Ingresos() {
   const navigate = useNavigate();
   const [ingresos, setIngresos] = useState([]);
   const [sociedades, setSociedades] = useState([]);
+  const [ingresoSociedad, setIngresoSociedad] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mensaje, setMensaje] = useState(null);
 
@@ -19,6 +20,8 @@ export default function Ingresos() {
   useEffect(() => {
     cargar();
   }, [id_sociedad]);
+
+  
 
   const cargar = async () => {
     try {
@@ -73,13 +76,17 @@ export default function Ingresos() {
 
                       <button
                         className="btn btn-primary btn-sm"
-                        onClick={() => navigate(`/ingresos/${s.id_sociedad}`)}
+                        onClick={() => navigate(`/ingreso-sociedad/${s.id_sociedad}`)}
                       >
                         Ver ingresos
                       </button>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => navigate(`/agregar-ingreso/${s.id_sociedad}`)}
+                      >Agregar Ingreso</button>
                     </li>
                   ))
-                )}
+                )} 
               </ul>
             )}
           </div>

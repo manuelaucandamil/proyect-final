@@ -29,7 +29,7 @@ export const crearSociedad = async (req, res) => {
         nombre,
         descripcion: descripcion || null,
         codigo,
-        creado_por: id_usuario,
+        creada_por: id_usuario,
       })
       .select()
       .single();
@@ -51,7 +51,7 @@ export const obtenerSociedades = async (req, res) => {
     const { data, error } = await supabaseAdmin
       .from("sociedades")
       .select("*")
-      .eq("creado_por", id_usuario)
+      .eq("creada_por", id_usuario)
       .order("creado_en", { ascending: false });
 
     if (error) throw error;

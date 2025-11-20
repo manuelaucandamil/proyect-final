@@ -16,6 +16,6 @@ router.post("/", authMiddleware, repartir);
 router.get("/sociedad/:id_sociedad", authMiddleware, historialDistribuciones);
 
 // Obtener detalle de una distribución específica
-router.get("/detalle/:id_distribucion", authMiddleware, detalleDistribucion);
+router.get("/detalle/:id_distribucion", detalleDistribucion);
 
 export default router;

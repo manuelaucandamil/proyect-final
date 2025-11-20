@@ -39,7 +39,7 @@ export default function AgregarIngreso() {
       mostrarMensaje("Ingreso registrado correctamente 🎉", "success");
 
       setTimeout(() => {
-        navigate(`/ingresos/${id_sociedad}`);
+        navigate(`/ingresos`);
       }, 800);
 
     } catch (err) {
@@ -61,7 +61,7 @@ export default function AgregarIngreso() {
               <h3>Registrar Ingreso</h3>
               <button
                 className="btn btn-secondary btn-sm"
-                onClick={() => navigate(`/ingresos/${id_sociedad}`)}
+                onClick={() => navigate(`/ingresos`)}
               >
                 Volver
               </button>

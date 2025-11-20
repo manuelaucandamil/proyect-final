@@ -63,9 +63,7 @@ export default function Navbar() {
                 Distribuir ingresos
               </Link>
 
-              <Link to="/historial-distribuciones" className="nav-link" onClick={close}>
-                Historial
-              </Link>
+              
             </div>
           )}
 
