@@ -21,6 +21,7 @@ export async function registrar(req, res) {
       .from("usuarios")
       .insert([{ nombre, email, password_hash }]);
 
+
     if (error) {
       console.error("Error insertando usuario:", error);
       // Si es email duplicado (unique violation)
@@ -30,12 +31,14 @@ export async function registrar(req, res) {
       return res.status(400).json({ mensaje: "No se pudo registrar el usuario" });
     }
 
+
     return res.json({ mensaje: "Usuario registrado" });
   } catch (err) {
     console.error("Error en registrar:", err);
     return res.status(500).json({ mensaje: "Error interno del servidor" });
   }
 }
+
 
 // POST /api/auth/login
 export async function login(req, res) {
